@@ -2,9 +2,11 @@ name := "sparkstream_ioft"
 
 version := "1.0"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.10.5"
 
 libraryDependencies ++= Seq (
+  "org.apache.spark" %% "spark-streaming" % "1.6.1",
+  "com.sksamuel.elastic4s" %% "elastic4s-core" % "2.3.0",
   "org.json4s" %% "json4s-jackson" % "3.3.0",
 //  "com.github.nscala-time" %% "nscala-time" % "2.10.0",
   "org.scalactic" %% "scalactic" % "2.2.6",
