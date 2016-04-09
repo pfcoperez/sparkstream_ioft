@@ -1,0 +1,18 @@
+package com.stratio.ioft.domain
+
+object LibrePilot {
+
+  case class Value(name: String, value: Double)
+
+  case class Field(name: String, tpe: String, unit: String, values: List[Value])
+
+  case class Entry(
+                    fields: List[Field],
+                    gcs_timestamp_ms: BigInt,
+                    id: String,
+                    instance: Long,
+                    name: String,
+                    setting: Boolean
+                  )
+
+}
