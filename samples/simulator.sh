@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ $# -ne 1 ]; then
-    echo "Usage: consolidate.sh INPUT_PATH"
+    echo "Usage: simulator.sh INPUT_PATH"
     exit 0
 fi
 
