@@ -15,7 +15,8 @@ Provided by entries (`Entry`) with name _AttitudeState_
 
 The following example:
 
-```
+
+```json
 {
   "fields": [
     {
@@ -63,7 +64,7 @@ The following example:
 
 Is telling us that:
 
-*The drone is looking towards NE: 13.04º (positive yaw)
-*It is 12.36º inclined to the right (positive roll)
-*And slightly facing ground: -7.53º (negative pitch)
+* The drone is looking towards NE: 13.04º (positive yaw)
+* It is 12.36º inclined to the right (positive roll)
+* And slightly facing ground: -7.53º (negative pitch)
 
