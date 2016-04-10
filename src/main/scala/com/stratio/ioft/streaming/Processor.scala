@@ -2,13 +2,23 @@ package com.stratio.ioft.streaming
 
 import com.sksamuel.elastic4s.ElasticClient
 import com.sksamuel.elastic4s.ElasticDsl._
+import com.stratio.ioft.settings.IOFTConfig
 import org.apache.spark._
 import org.apache.spark.streaming._
-import org.apache.spark.streaming.StreamingContext._
+import org.elasticsearch.common.settings._
 
-class Processor extends App {
+import scala.collection.JavaConversions._
 
-  val client = ElasticClient.local
+object Processor extends App with IOFTConfig {
+
+  val settings = Settings.settingsBuilder()
+
+  esConfig.entrySet().map {
+    entry =>
+      settings.put(entry.getKey, esConfig.getAnyRef(entry.getKey))
+  }
+
+  val client = ElasticClient.local(settings.build)
 
   val conf = new SparkConf().setMaster("local[*]").setAppName("IOFT")
   val ssc = new StreamingContext(conf, Seconds(5))
