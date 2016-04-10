@@ -7,7 +7,7 @@ import org.json4s.jackson.JsonMethods._
 
 class LibrePilotSerializationSpec extends FlatSpec with Matchers {
 
-  implicit val _: Formats = DefaultFormats + FieldSerializer
+  implicit val _: Formats = DefaultFormats ++ librePilotSerializers
 
   "json4s" should "be able to deserialize LibrePilot's values" in {
 
@@ -56,8 +56,8 @@ class LibrePilotSerializationSpec extends FlatSpec with Matchers {
         |{
         |  "fields": [
         |    {
-        |      "name": "q1",
         |      "type": "float32",
+        |      "name": "q1",
         |      "unit": "",
         |      "values": [
         |        {
