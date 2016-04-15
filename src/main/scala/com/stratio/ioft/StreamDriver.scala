@@ -1,30 +1,22 @@
 package com.stratio.ioft
 
 import com.stratio.ioft.domain.LibrePilot.Entry
-import org.apache.spark.SparkConf
-import org.apache.spark.streaming.{Seconds, StreamingContext}
-import org.json4s.jackson.JsonMethods._
+import com.stratio.ioft.persistence.ESPersistence._
 import com.stratio.ioft.serialization.json4s.librePilotSerializers
+import com.stratio.ioft.settings.IOFTConfig
+import org.apache.spark.SparkConf
+import org.apache.spark.streaming.dstream.DStream
+import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.json4s.DefaultFormats
+import org.json4s.jackson.JsonMethods._
 
-trait StreamDriverConf {
+object StreamDriver extends App with IOFTConfig {
 
-  val batchDuration = Seconds(1)
+  val conf = new SparkConf() setMaster(sparkConfig.getString("master")) setAppName(sparkConfig.getString("appName"))
 
-  object sourceConf {
-    val addr = "localhost"
-    val port = 7891
-  }
+  val sc = new StreamingContext(conf, Seconds(sparkStreamingConfig.getLong("batchDuration")))
 
-}
-
-object StreamDriver extends App with StreamDriverConf {
-
-  val conf = new SparkConf() setMaster("local[2]") setAppName("Drone stream sample")
-
-  val sc = new StreamingContext(conf, batchDuration)
-
-  val rawInputStream = sc.socketTextStream(sourceConf.addr, sourceConf.port)
+  val rawInputStream = sc.socketTextStream(sourceConfig.getString("host"), sourceConfig.getInt("port"))
 
   // Extract case class instances from the input text
 
@@ -35,6 +27,19 @@ object StreamDriver extends App with StreamDriverConf {
   }
 
   entriesStream.print()
+
+  /**
+    * TODO: Add the proper logic.
+    * DISCLAIMER: I know this is a stupid method and it's wrong.
+    */
+  def processEntry(entriesStream: DStream[Entry]): DStream[(String, String)] = {
+    entriesStream.map {
+      entry =>
+        (entry.name, entry.id)
+    }
+  }
+
+  persist(processEntry(entriesStream))
 
   sc.start()
   sc.awaitTermination
