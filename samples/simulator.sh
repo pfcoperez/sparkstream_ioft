@@ -8,6 +8,7 @@ fi
 FILE_PATH=$1 
 
 function getEntryTime {
+    ## For Mac: echo $1 | perl -nle 'print $& if m{"gcs_timestamp_ms":[0-9]+}' | awk -F ":" '{print $2}'
     echo $1 | grep -Po "\"gcs_timestamp_ms\":[0-9]+" | awk -F ":" '{print $2}'  
 }
 
