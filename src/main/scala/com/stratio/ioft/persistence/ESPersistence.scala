@@ -2,7 +2,6 @@ package com.stratio.ioft.persistence
 
 import com.sksamuel.elastic4s.ElasticClient
 import com.sksamuel.elastic4s.ElasticDsl._
-import com.stratio.ioft.domain.LibrePilot
 import com.stratio.ioft.settings.IOFTConfig
 import org.apache.spark.streaming.dstream.DStream
 import org.elasticsearch.common.settings.Settings
@@ -20,7 +19,7 @@ object ESPersistence extends IOFTConfig {
 
   val client = ElasticClient.local(settings.build)
 
-  def persist(dStream: DStream[(String, String)]): Unit ={
+  def persist(dStream: DStream[(String, String)]) ={
     dStream.foreachRDD{ rdd =>
       client.execute{ index into "ioft" / "drone" fields rdd.collect()}
     }

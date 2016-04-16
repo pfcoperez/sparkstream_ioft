@@ -7,6 +7,7 @@ object IOFTConfig {
   val ioftSparkStreamingConfig = "ioft.spark.streaming"
   val ioftSourceConfig = "ioft.source"
   val ioftEsConfig = "ioft.es"
+  val ioftCassandraConfig = "ioft.cassandra"
 }
 
 trait IOFTConfig {
@@ -22,5 +23,7 @@ trait IOFTConfig {
   lazy val sourceConfig = config.getConfig(ioftSourceConfig)
 
   lazy val esConfig = config.getConfig(ioftEsConfig)
+
+  lazy val cassandraConfig = config.getConfig(ioftCassandraConfig)
 
 }
