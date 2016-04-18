@@ -1,7 +1,8 @@
 package com.stratio.ioft
 
 import com.stratio.ioft.domain.LibrePilot.Entry
-import com.stratio.ioft.persistence.ESPersistence._
+import com.stratio.ioft.domain.LibrePilot.Field
+import com.stratio.ioft.persistence.CassandraPersistence._
 import com.stratio.ioft.serialization.json4s.librePilotSerializers
 import com.stratio.ioft.settings.IOFTConfig
 import org.apache.spark.SparkConf
@@ -32,10 +33,10 @@ object StreamDriver extends App with IOFTConfig {
     * TODO: Add the proper logic.
     * DISCLAIMER: I know this is a stupid method and it's wrong.
     */
-  def processEntry(entriesStream: DStream[Entry]): DStream[(String, String)] = {
+  def processEntry(entriesStream: DStream[Entry]): DStream[(String, BigInt, List[Field])] = {
     entriesStream.map {
       entry =>
-        (entry.name, entry.id)
+        (entry.name, entry.gcs_timestamp_ms, entry.fields)
     }
   }
 
