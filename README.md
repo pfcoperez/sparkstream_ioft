@@ -72,7 +72,7 @@ Is telling us that:
 
 Acceleration information is given as:
 
-```
+```json
 {
     "fields": [
       {
