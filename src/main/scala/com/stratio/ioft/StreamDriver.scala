@@ -1,7 +1,6 @@
 package com.stratio.ioft
 
-import com.stratio.ioft.domain.LibrePilot.Entry
-import com.stratio.ioft.domain.LibrePilot.Field
+import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
 import com.stratio.ioft.persistence.CassandraPersistence._
 import com.stratio.ioft.serialization.json4s.librePilotSerializers
 import com.stratio.ioft.settings.IOFTConfig
@@ -12,6 +11,12 @@ import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
 
 object StreamDriver extends App with IOFTConfig {
+
+  import org.apache.log4j.Logger
+  import org.apache.log4j.Level
+
+  Logger.getLogger("org").setLevel(Level.ERROR)
+  Logger.getLogger("akka").setLevel(Level.ERROR)
 
   val conf = new SparkConf() setMaster(sparkConfig.getString("master")) setAppName(sparkConfig.getString("appName"))
 
@@ -27,7 +32,22 @@ object StreamDriver extends App with IOFTConfig {
     parse(json).extract[Entry]
   }
 
-  entriesStream.print()
+  val accelerationStream = entriesStream.flatMap {
+    case Entry(fields: List[Field @ unchecked], ts, _, _, "AccelState", _) =>
+      fields collect {
+        case Field("z", _, "m/s^2", Value(_, v: Double)::_) => ts -> v
+      }
+    case _ => Seq()
+  }
+
+  val bumpStream = accelerationStream.filter { case (_, v: Double) =>
+    -5 <= v && v <= 5
+  }
+
+  bumpStream.foreachRDD(_.foreach(x => println(s"PEAK!!$x")))
+  accelerationStream.foreachRDD(_.foreach(x => println(x)))
+
+  /*entriesStream.print()
 
   /**
     * TODO: Add the proper logic.
@@ -40,7 +60,7 @@ object StreamDriver extends App with IOFTConfig {
     }
   }
 
-  persist(processEntry(entriesStream))
+  persist(processEntry(entriesStream))*/
 
   sc.start()
   sc.awaitTermination
