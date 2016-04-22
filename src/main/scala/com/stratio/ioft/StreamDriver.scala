@@ -4,6 +4,8 @@ import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
 import com.stratio.ioft.persistence.CassandraPersistence._
 import com.stratio.ioft.serialization.json4s.librePilotSerializers
 import com.stratio.ioft.settings.IOFTConfig
+import com.stratio.ioft.Detectors._
+
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.{Seconds, StreamingContext}
@@ -32,20 +34,10 @@ object StreamDriver extends App with IOFTConfig {
     parse(json).extract[Entry]
   }
 
-  val accelerationStream = entriesStream.flatMap {
-    case Entry(fields: List[Field @ unchecked], ts, _, _, "AccelState", _) =>
-      fields collect {
-        case Field("z", _, "m/s^2", Value(_, v: Double)::_) => ts -> v
-      }
-    case _ => Seq()
-  }
-
-  val bumpStream = accelerationStream.filter { case (_, v: Double) =>
-    -5 <= v && v <= 5
-  }
+  val bumpStream = averageOutlierBumpDetector(entriesStream, 9)
 
   bumpStream.foreachRDD(_.foreach(x => println(s"PEAK!!$x")))
-  accelerationStream.foreachRDD(_.foreach(x => println(x)))
+
 
   /*entriesStream.print()
 
