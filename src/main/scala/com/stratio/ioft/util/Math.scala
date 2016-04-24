@@ -50,25 +50,66 @@ object Math {
 
   object LinAlg {
 
-    def transpose[T](v: Vector[T]): Vector[Vector[T]] = v.transpose((x: T) => Vector(x))
     def transpose[T](m: Vector[Vector[T]]): Vector[Vector[T]] = m.transpose
 
-    def multiply[T](
-                     A: Vector[Vector[T]],
-                     B: Vector[Vector[T]]
-                   )(implicit toNumeric: T => Numeric[T]): Vector[Vector[T]] = {
+    def multiply[T <% Numeric[T]](A: Vector[Vector[T]], B: Vector[Vector[T]]): Vector[Vector[T]] = {
       require(A.length == B.head.length)
-      for(i <- 0 until A.length) yield {
-        for(j <- 0 until A.head.length) yield
+      for(i <- (0 until A.length).toVector) yield {
+        for(j <- (0 until A.head.length).toVector) yield
           (A.head.head.sumIdentity /: (0 until A.length)) { (s: T, t) =>
             s + A(i)(t)*B(t)(j)
           }
-      } toVector
-    } toVector
+      }
+    }
+
+    def identity[T <% Numeric[T]](n: Int, e: T): Vector[Vector[T]] =
+      Vector.tabulate(n,n) {
+        case (i,j) if i == j => e
+        case _ => e.sumIdentity
+      }
+
+    def transform[T <% Numeric[T]](transformationMatrix: Vector[Vector[T]], v: Vector[T]): Vector[T] =
+      transpose(multiply(transformationMatrix, transpose(Vector(v)))).head
 
   }
 
   object Geometry {
+
+    import scala.math.{Pi, sin, cos}
+    import Implicits.Numeric
+    import LinAlg._
+
+    def degrees2rads(degrees: Double): Double = Pi*degrees/180.0
+
+    def rotateAboutX(rads: Double, v: Vector[Double]): Vector[Double] = {
+      val rotMatrix = Vector(
+        Vector(1.0,   0.0,              0.0),
+        Vector(0.0,   cos(rads), -sin(rads)),
+        Vector(0.0,   sin(rads),  cos(rads))
+      )
+      transform(rotMatrix, v)
+    }
+
+    def rotateAboutY(rads: Double, v: Vector[Double]): Vector[Double] = {
+      val rotMatrix = Vector(
+        Vector(cos(rads),  0.0,  sin(rads)),
+        Vector(0.0,        1.0,        0.0),
+        Vector(-sin(rads), 0.0,   cos(rads))
+      )
+      transform(rotMatrix, v)
+    }
+
+    def rotateAboutZ(rads: Double, v: Vector[Double]): Vector[Double] = {
+      val rotMatrix = Vector(
+        Vector(cos(rads), -sin(rads), 0.0),
+        Vector(sin(rads), cos(rads),  0.0),
+        Vector(0.0,             0.0,  1.0)
+      )
+      transform(rotMatrix, v)
+    }
+
+    def rotate(angles: (Double, Double, Double), v: Vector[Double]): Vector[Double] =
+      rotateAboutZ(angles._3, rotateAboutY(angles._2, rotateAboutX(angles._1, v)))
 
   }
 
