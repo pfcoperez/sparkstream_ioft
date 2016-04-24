@@ -36,7 +36,7 @@ object StreamDriver extends App with IOFTConfig {
     parse(json).extract[Entry]
   }
 
-  val accelStream = accelerationStream(entriesStream)
+  val accelStream = accelerationStream(entriesStream.window(Seconds(5), Seconds(5)))
 
   val bumpStream = averageOutlierBumpDetector(accelStream.map {case (ts, (x,y,z)) => ts -> z }, 5.0)
   //val bumpStream = naiveBumpDetector(accelStream)
