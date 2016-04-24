@@ -19,23 +19,22 @@ object Detectors {
     }
   }
 
-  def naiveBumpDetector(entriesStream: DStream[Entry]): DStream[(BigInt, Double)] =
-    accelerationStream(entriesStream).filter { case (_, v: Double) => -5 <= v && v <= 5 }
+  def naiveBumpDetector(accelStream: DStream[(BigInt, Double)]): DStream[(BigInt, Double)] =
+    accelStream.filter { case (_, v: Double) => -5 <= v && v <= 5 }
 
   def averageOutlierBumpDetector(
-                                  entriesStream: DStream[Entry],
+                                  accelStream: DStream[(BigInt, Double)],
                                   threshold: Double = 0.0,
                                   nStDev: Double = 1.8): DStream[(BigInt, Double)] =
-    accelerationStream(entriesStream).transform { rdd: RDD[(BigInt, Double)] =>
-      val accelStats = try {
-        rdd.map(_._2).stats
-      } catch {
-        case _ => new StatCounter()
-      }
-      rdd.filter { case (_, accelval) =>
-        val diff = Math.abs(accelval - accelStats.mean)
-        diff >= Math.max(threshold, nStDev*accelStats.sampleStdev)
-      }
+    accelStream.transform { rdd: RDD[(BigInt, Double)] =>
+        if(rdd.isEmpty) rdd
+        else {
+          val accelStats = rdd.map(_._2).stats
+          rdd.filter { case (_, accelval) =>
+            val diff = Math.abs(accelval - accelStats.mean)
+            diff >= Math.max(threshold, nStDev*accelStats.sampleStdev)
+          }
+        }
     }
 
 }
