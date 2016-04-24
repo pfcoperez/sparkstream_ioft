@@ -1,7 +1,7 @@
 package com.stratio.ioft
 
 import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
-import com.stratio.ioft.persistence.CassandraPersistence._
+//import com.stratio.ioft.persistence.CassandraPersistence._
 import com.stratio.ioft.serialization.json4s.librePilotSerializers
 import com.stratio.ioft.settings.IOFTConfig
 import com.stratio.ioft.Detectors._
@@ -24,6 +24,8 @@ object StreamDriver extends App with IOFTConfig {
 
   val sc = new StreamingContext(conf, Seconds(sparkStreamingConfig.getLong("batchDuration")))
 
+  //sc.sparkContext.setLogLevel("ERROR")
+
   val rawInputStream = sc.socketTextStream(sourceConfig.getString("host"), sourceConfig.getInt("port"))
 
   // Extract case class instances from the input text
@@ -34,13 +36,15 @@ object StreamDriver extends App with IOFTConfig {
     parse(json).extract[Entry]
   }
 
-  val bumpStream = averageOutlierBumpDetector(entriesStream, 9)
+  val accelStream = accelerationStream(entriesStream)
+
+  val bumpStream = averageOutlierBumpDetector(accelStream, 5.0)
+  //val bumpStream = naiveBumpDetector(accelStream)
 
   bumpStream.foreachRDD(_.foreach(x => println(s"PEAK!!$x")))
+  //accelStream.foreachRDD(_.foreach(x => println(x)))
 
-
-  /*entriesStream.print()
-
+  /*
   /**
     * TODO: Add the proper logic.
     * DISCLAIMER: I know this is a stupid method and it's wrong.
