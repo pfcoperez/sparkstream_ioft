@@ -9,8 +9,12 @@ import org.apache.spark.util.StatCounter
 
 object Detectors {
 
-  def accelerationStream(entriesStream: DStream[Entry]): DStream[(BigInt, (Double, Double, Double))] = {
-    entriesStream.flatMap {
+  type DroneIdType = String
+
+  def accelerationStream(
+                          entriesStream: DStream[(DroneIdType, Entry)]
+                        ): DStream[(DroneIdType, (BigInt, (Double, Double, Double)))] = {
+    entriesStream.flatMapValues {
       case Entry(fields: List[Field@unchecked], ts, _, _, "AccelState", _) =>
         val dimVals = fields collect {
           case Field(dim, _, "m/s^2", Value(_, v: Double) :: _) => dim -> v
@@ -25,18 +29,21 @@ object Detectors {
   }
 
 
-  def naiveBumpDetector(zAccelStream: DStream[(BigInt, Double)]): DStream[(BigInt, Double)] =
-    zAccelStream.filter { case (_, v: Double) => -5 <= v && v <= 5 }
+  def naiveBumpDetector(
+                         zAccelStream: DStream[(DroneIdType, (BigInt, Double))]
+                       ): DStream[(DroneIdType, (BigInt, Double))] =
+    zAccelStream.filter { case (_, (_, v: Double)) => -5 <= v && v <= 5 }
 
   def averageOutlierBumpDetector(
-                                  zAccelStream: DStream[(BigInt, Double)],
+                                  zAccelStream: DStream[(DroneIdType, (BigInt, Double))],
                                   threshold: Double = 0.0,
-                                  nStDev: Double = 1.8): DStream[(BigInt, Double)] =
-    zAccelStream.transform { rdd: RDD[(BigInt, Double)] =>
+                                  nStDev: Double = 1.8
+                                ): DStream[(DroneIdType, (BigInt, Double))] =
+    zAccelStream.transform { rdd: RDD[(DroneIdType, (BigInt, Double))] =>
         if(rdd.isEmpty) rdd
         else {
-          val accelStats = rdd.map(_._2).stats
-          rdd.filter { case (_, accelval) =>
+          val accelStats = rdd.map(_._2._2).stats
+          rdd.filter { case (_, (_, accelval)) =>
             val diff = Math.abs(accelval - accelStats.mean)
             diff >= Math.max(threshold, nStDev*accelStats.sampleStdev)
           }

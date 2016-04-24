@@ -26,19 +26,21 @@ object StreamDriver extends App with IOFTConfig {
 
   //sc.sparkContext.setLogLevel("ERROR")
 
-  val rawInputStream = sc.socketTextStream(sourceConfig.getString("host"), sourceConfig.getInt("port"))
+  val droneId: DroneIdType = "drone01"
+
+  val rawInputStream = sc.socketTextStream(
+    sourceConfig.getString("host"), sourceConfig.getInt("port")
+  ) map (json => droneId -> json)
 
   // Extract case class instances from the input text
 
   implicit val formats = DefaultFormats ++ librePilotSerializers
 
-  val entriesStream = rawInputStream.map { json =>
-    parse(json).extract[Entry]
-  }
+  val entriesStream = rawInputStream.mapValues(parse(_).extract[Entry])
 
-  val accelStream = accelerationStream(entriesStream)
+  val accelStream = accelerationStream(entriesStream.window(Seconds(5), Seconds(5)))
 
-  val bumpStream = averageOutlierBumpDetector(accelStream.map {case (ts, (x,y,z)) => ts -> z }, 5.0)
+  val bumpStream = averageOutlierBumpDetector(accelStream.mapValues { case (ts, (x,y,z)) => ts -> z }, 5.0)
   //val bumpStream = naiveBumpDetector(accelStream)
 
   bumpStream.foreachRDD(_.foreach(x => println(s"PEAK!!$x")))
