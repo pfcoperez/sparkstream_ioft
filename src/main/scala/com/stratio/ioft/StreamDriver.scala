@@ -38,7 +38,7 @@ object StreamDriver extends App with IOFTConfig {
 
   val accelStream = accelerationStream(entriesStream)
 
-  val bumpStream = averageOutlierBumpDetector(accelStream, 5.0)
+  val bumpStream = averageOutlierBumpDetector(accelStream.map {case (ts, (x,y,z)) => ts -> z }, 5.0)
   //val bumpStream = naiveBumpDetector(accelStream)
 
   bumpStream.foreachRDD(_.foreach(x => println(s"PEAK!!$x")))
