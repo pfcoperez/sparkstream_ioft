@@ -1,8 +1,7 @@
 package com.stratio.ioft.simulator
 
-import java.io.{DataOutputStream, ObjectOutputStream}
-import java.net.{InetAddress, ServerSocket, Socket}
-import java.sql.Timestamp
+import java.io.PrintWriter
+import java.net.ServerSocket
 import java.util
 import java.util.Map
 
@@ -27,30 +26,31 @@ object JsonToSocketSimulator extends App {
     if(prevTimestamp != Long.MaxValue){
       println(s"Waiting ${currentTimestamp - prevTimestamp} ms")
       Thread.sleep(currentTimestamp - prevTimestamp)
-    } else {
-      println(s"Waiting 0 ms")
     }
     prevTimestamp = currentTimestamp
     socketAgent.write(line._1)
   }
 
-  socketAgent.close()
+  socketAgent.close
 
 }
 
 class SocketAgent {
 
-  val server = new ServerSocket(7891).accept
-  println(s"Server Address: ${server.getInetAddress}:${server.getPort}")
-  val out = new ObjectOutputStream(new DataOutputStream(server.getOutputStream))
+  val server = new ServerSocket(7891)
+  println(s"Server Address: ${server.getLocalSocketAddress}")
+  val connection  = server.accept
+  println(s"Connection from: ${connection.getRemoteSocketAddress}")
+  val out = new PrintWriter(connection.getOutputStream)
 
   def write(line: String) = {
-    println("Writing to socket")
-    out.writeUTF(line)
-    println("Flushing")
-    out.flush()
+    out.write(s"$line${System.lineSeparator}")
+    out.flush
   }
 
-  def close() = server.close
+  def close() = {
+    out.flush
+    server.close
+  }
 
 }

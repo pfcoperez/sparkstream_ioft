@@ -1,8 +1,11 @@
 package com.stratio.ioft
 
 import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
+import org.apache.spark.{Partition, TaskContext}
+import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
+import org.apache.spark.util.StatCounter
 
 object Detectors {
 
@@ -22,10 +25,13 @@ object Detectors {
   def averageOutlierBumpDetector(
                                   entriesStream: DStream[Entry],
                                   threshold: Double = 0.0,
-                                  nStDev: Double = 1.8): DStream[(BigInt,
-    Double)] =
+                                  nStDev: Double = 1.8): DStream[(BigInt, Double)] =
     accelerationStream(entriesStream).transform { rdd: RDD[(BigInt, Double)] =>
-      val accelStats = rdd.map(_._2).stats
+      val accelStats = try {
+        rdd.map(_._2).stats
+      } catch {
+        case _ => new StatCounter()
+      }
       rdd.filter { case (_, accelval) =>
         val diff = Math.abs(accelval - accelStats.mean)
         diff >= Math.max(threshold, nStDev*accelStats.sampleStdev)
