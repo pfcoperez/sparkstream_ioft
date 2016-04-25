@@ -12,6 +12,9 @@ import scala.io.Source
 
 object JsonToSocketSimulator extends App {
 
+  //val incomingFile = "samples/dronestream_withcontrols.jsons"
+  val incomingFile = "samples/flight_at_home.jsons"
+
   val socketAgent = new SocketAgent()
 
   var jsonMap = new util.HashMap[String, Object]()
@@ -19,7 +22,7 @@ object JsonToSocketSimulator extends App {
   var prevTimestamp = Long.MaxValue
   var currentTimestamp = Long.MaxValue
 
-  for(line <- Source.fromFile("samples/dronestream_withcontrols.jsons").getLines.zipWithIndex) {
+  for(line <- Source.fromFile(incomingFile).getLines.zipWithIndex) {
     jsonMap = mapper.readValue(line._1, new TypeReference[Map[String, Object]]() {})
     println(s"LINE ${line._2} = gcs_timestamp_ms: ${jsonMap.get("gcs_timestamp_ms")}")
     currentTimestamp = jsonMap.get("gcs_timestamp_ms").asInstanceOf[Long]

@@ -1,16 +1,18 @@
 package com.stratio.ioft
 
 import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
-//import com.stratio.ioft.persistence.CassandraPersistence._
+import com.stratio.ioft.persistence.CassandraPersistence._
 import com.stratio.ioft.serialization.json4s.librePilotSerializers
 import com.stratio.ioft.settings.IOFTConfig
 import com.stratio.ioft.Detectors._
-
+import com.stratio.ioft.persistence.PrimaryKey
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
+
+import scala.collection.immutable.ListMap
 
 object StreamDriver extends App with IOFTConfig {
 
@@ -42,6 +44,21 @@ object StreamDriver extends App with IOFTConfig {
 
   val bumpStream = averageOutlierBumpDetector(accelStream.mapValues { case (ts, (x,y,z)) => ts -> z }, 5.0)
   //val bumpStream = naiveBumpDetector(accelStream)
+
+  /*
+  val colNames = Array("droneID", "event_time", "axis_accel")
+
+  bumpStream.map(peak => (peak._1, peak._2._1, peak._2._2)).foreachRDD(rdd => {
+    createTable(
+      "peaks",
+      Array("DroneID", "event_time", "axis_accel"),
+      PrimaryKey(Array("DroneID"), Array("event_time")),
+      rdd.take(1).head)
+    rdd.foreach(x => {
+      println(s"PEAK!!$x")
+      persist("peaks", colNames, x)
+  })})
+  */
 
   bumpStream.foreachRDD(_.foreach(x => println(s"PEAK!!$x")))
   //accelStream.foreachRDD(_.foreach(x => println(x)))
