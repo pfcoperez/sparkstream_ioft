@@ -1,6 +1,7 @@
 package com.stratio.ioft
 
 import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
+import com.stratio.ioft.domain.states.Acceleration
 //import com.stratio.ioft.persistence.CassandraPersistence._
 import com.stratio.ioft.serialization.json4s.librePilotSerializers
 import com.stratio.ioft.settings.IOFTConfig
@@ -40,7 +41,7 @@ object StreamDriver extends App with IOFTConfig {
 
   val accelStream = accelerationStream(entriesStream.window(Seconds(5), Seconds(5)))
 
-  val bumpStream = averageOutlierBumpDetector(accelStream.mapValues { case (ts, (x,y,z)) => ts -> z }, 5.0)
+  val bumpStream = averageOutlierBumpDetector(accelStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 5.0)
   //val bumpStream = naiveBumpDetector(accelStream)
 
   bumpStream.foreachRDD(_.foreach(x => println(s"PEAK!!$x")))
