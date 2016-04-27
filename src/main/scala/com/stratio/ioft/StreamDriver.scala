@@ -7,6 +7,7 @@ import com.stratio.ioft.domain.measures.Acceleration
 import com.stratio.ioft.serialization.json4s.librePilotSerializers
 import com.stratio.ioft.settings.IOFTConfig
 import com.stratio.ioft.Detectors._
+import com.stratio.ioft.Aggregators._
 
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.dstream.DStream
@@ -39,12 +40,12 @@ object StreamDriver extends App with IOFTConfig {
   implicit val formats = DefaultFormats ++ librePilotSerializers
 
   val entriesStream = rawInputStream.mapValues(parse(_).extract[Entry])
+  val entries5sWindowedStream = entriesStream.window(Seconds(5), Seconds(5))
 
-  val accelStream = accelerationStream(entriesStream.window(Seconds(5), Seconds(5)))
+  val accel5sWindowedStream = accelerationStream(entries5sWindowedStream)
+  val hAttitudesin5sWindowedStream = attitudeHistoryStream(attitudeStream(entries5sWindowedStream))
 
-
-
-  val bumpStream = averageOutlierBumpDetector(accelStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 5.0)
+  val bumpStream = averageOutlierBumpDetector(accel5sWindowedStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 5.0)
   //val bumpStream = naiveBumpDetector(accelStream)
 
   bumpStream.foreachRDD(_.foreach(x => println(s"PEAK!!$x")))
