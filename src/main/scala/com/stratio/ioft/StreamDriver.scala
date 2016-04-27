@@ -1,7 +1,7 @@
 package com.stratio.ioft
 
 import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
-import com.stratio.ioft.domain.states.Acceleration
+import com.stratio.ioft.domain.measures.Acceleration
 //import com.stratio.ioft.persistence.CassandraPersistence._
 import com.stratio.ioft.serialization.json4s.librePilotSerializers
 import com.stratio.ioft.settings.IOFTConfig
