@@ -1,16 +1,14 @@
 package com.stratio.ioft
 
+import com.stratio.ioft.domain.DroneIdType
 import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
 import com.stratio.ioft.domain.measures.{Acceleration, Attitude}
 import org.apache.spark.{Partition, TaskContext}
 import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
-import org.apache.spark.util.StatCounter
 
 object Detectors {
-
-  type DroneIdType = String
 
   def attitudeStream(
                       entriesStream: DStream[(DroneIdType, Entry)]

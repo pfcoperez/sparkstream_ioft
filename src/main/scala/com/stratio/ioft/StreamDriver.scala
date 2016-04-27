@@ -1,5 +1,6 @@
 package com.stratio.ioft
 
+import com.stratio.ioft.domain.DroneIdType
 import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
 import com.stratio.ioft.domain.measures.Acceleration
 //import com.stratio.ioft.persistence.CassandraPersistence._
@@ -40,6 +41,8 @@ object StreamDriver extends App with IOFTConfig {
   val entriesStream = rawInputStream.mapValues(parse(_).extract[Entry])
 
   val accelStream = accelerationStream(entriesStream.window(Seconds(5), Seconds(5)))
+
+
 
   val bumpStream = averageOutlierBumpDetector(accelStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 5.0)
   //val bumpStream = naiveBumpDetector(accelStream)
