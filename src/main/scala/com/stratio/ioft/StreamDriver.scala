@@ -2,7 +2,8 @@ package com.stratio.ioft
 
 import com.stratio.ioft.domain.DroneIdType
 import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
-import com.stratio.ioft.domain.measures.Acceleration
+import com.stratio.ioft.domain.measures.{Acceleration, Attitude}
+import com.stratio.ioft.domain.states.AttitudeHistory
 //import com.stratio.ioft.persistence.CassandraPersistence._
 import com.stratio.ioft.serialization.json4s.librePilotSerializers
 import com.stratio.ioft.settings.IOFTConfig
@@ -14,6 +15,8 @@ import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
+import com.stratio.ioft.util.Math.Geometry.rotate
+
 
 object StreamDriver extends App with IOFTConfig {
 
@@ -44,6 +47,21 @@ object StreamDriver extends App with IOFTConfig {
 
   val accel5sWindowedStream = accelerationStream(entries5sWindowedStream)
   val hAttitudesin5sWindowedStream = attitudeHistoryStream(attitudeStream(entries5sWindowedStream))
+
+  val normalizedAccel5sWindowedStream = accel5sWindowedStream.join(hAttitudesin5sWindowedStream) flatMap {
+    case (id, ((ts, acceleration), attitudeFrameHistory)) =>
+      val closestAttitudes = attitudeFrameHistory.attitudeAt(ts)
+      closestAttitudes.headOption map { _ =>
+        val (_, attitude: Attitude) = closestAttitudes.minBy {
+          case (frame_ts, _) => math.abs((frame_ts-ts).toLong)
+        }
+        val rotational = attitude.productIterator.toSeq map { case angle: Double => math.toRadians(-angle) } match {
+          case Seq(alpha, betha, lambda) => (alpha, betha, lambda)
+        }
+        val absoluteAcceleration = rotate(rotational, )
+      }
+      Seq()
+  }
 
   val bumpStream = averageOutlierBumpDetector(accel5sWindowedStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 5.0)
   //val bumpStream = naiveBumpDetector(accelStream)

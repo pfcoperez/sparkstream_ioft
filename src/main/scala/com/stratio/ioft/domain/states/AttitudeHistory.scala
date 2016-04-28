@@ -9,9 +9,8 @@ case class AttitudeHistory(attitudes: Seq[(BigInt, Attitude)]) {
 
   def attitudeAt(timestamp_ms: BigInt): Seq[(BigInt, Attitude)] =
     attitudes indexWhere { case (ts, _) => ts > timestamp_ms } match {
-      case -1 => Seq()
-      case 0 => Seq(attitudes.head)
-      case n => attitudes.slice(n-1, n+1)
+      case n if n > 0 => attitudes.slice(n-1, n+1)
+      case _ => attitudes.headOption.toSeq
     }
 
 }

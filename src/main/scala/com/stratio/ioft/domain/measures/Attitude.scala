@@ -6,8 +6,8 @@ case class Attitude(
                      yaw: Double    // [-180.0, 180.0] Degrees
                    ) {
   require(
-    yaw >= 180.0 && yaw <= 180.0 &&
-      pitch >= 180.0 && pitch <= 180.0 &&
-        roll >= 180.0 && roll <= 180.0
+    yaw >= -180.0 && yaw <= 180.0 &&
+      pitch >= -180.0 && pitch <= 180.0 &&
+        roll >= -180.0 && roll <= 180.0
   )
 }

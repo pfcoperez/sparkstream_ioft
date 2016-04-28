@@ -75,11 +75,8 @@ object Math {
 
   object Geometry {
 
-    import scala.math.{Pi, sin, cos}
-    import Implicits.Numeric
+    import scala.math.{sin, cos}
     import LinAlg._
-
-    def degrees2rads(degrees: Double): Double = Pi*degrees/180.0
 
     def rotateAboutX(rads: Double, v: Vector[Double]): Vector[Double] = {
       val rotMatrix = Vector(
