@@ -20,7 +20,7 @@ object Combinators {
           val (_, attitude: Attitude) = closestAttitudes.minBy {
             case (frame_ts, _) => math.abs((frame_ts-ts).toLong)
           }
-          id -> (ts -> Acceleration.tupled(rotate(attitude map (angle => math.toRadians(-angle)), acceleration)))
+          id -> (ts -> Acceleration.tupled(rotate(attitude map (math.toRadians(_)), acceleration))) 
         }
     }
 
