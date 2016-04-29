@@ -1,4 +1,4 @@
-package com.stratio.ioft
+package com.stratio.ioft.streaming.transformations
 
 import com.stratio.ioft.domain.DroneIdType
 import com.stratio.ioft.domain.measures.Attitude

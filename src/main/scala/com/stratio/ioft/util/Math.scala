@@ -53,9 +53,9 @@ object Math {
     def transpose[T](m: Vector[Vector[T]]): Vector[Vector[T]] = m.transpose
 
     def multiply[T <% Numeric[T]](A: Vector[Vector[T]], B: Vector[Vector[T]]): Vector[Vector[T]] = {
-      require(A.length == B.head.length)
+      require(A.head.length == B.length)
       for(i <- (0 until A.length).toVector) yield {
-        for(j <- (0 until A.head.length).toVector) yield
+        for(j <- (0 until B.head.length).toVector) yield
           (A.head.head.sumIdentity /: (0 until A.length)) { (s: T, t) =>
             s + A(i)(t)*B(t)(j)
           }
