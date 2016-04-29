@@ -5,7 +5,7 @@ import com.typesafe.config.ConfigFactory
 object IOFTConfig {
   val ioftSparkConfig = "ioft.spark.config"
   val ioftSparkStreamingConfig = "ioft.spark.streaming"
-  val ioftSourceConfig = "ioft.es.source"
+  val ioftSourceConfig = "ioft.source"
   val ioftEsConfig = "ioft.es"
   val ioftCassandraConfig = "ioft.cassandra"
 }
