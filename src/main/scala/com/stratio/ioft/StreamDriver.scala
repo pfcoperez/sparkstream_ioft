@@ -8,6 +8,7 @@ import com.stratio.ioft.streaming.transformations._
 import Detectors._
 import Aggregators._
 import Combinators._
+import Sources._
 
 import com.stratio.ioft.serialization.json4s.librePilotSerializers
 import com.stratio.ioft.settings.IOFTConfig
@@ -60,6 +61,10 @@ object StreamDriver extends App with IOFTConfig {
 
   bumpStream.foreachRDD(_.foreach(x => println(s"PEAK!!$x")))
   //normalizedAccel5sWindowedStream.foreachRDD(_.foreach(x => println(x)))
+
+  val desiredAttitude = desiredAttitudeStream(entriesStream)
+  desiredAttitude.foreachRDD(_.foreach(x => println(s"Desired Attitude: $x")))
+
 
   /*
   /**
