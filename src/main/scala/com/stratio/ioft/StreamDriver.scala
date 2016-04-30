@@ -44,8 +44,10 @@ object StreamDriver extends App with IOFTConfig {
 
   implicit val formats = DefaultFormats ++ librePilotSerializers
 
+  val bumpInterval = Seconds(5)
+
   val entriesStream = rawInputStream.mapValues(parse(_).extract[Entry])
-  val entries5sWindowedStream = entriesStream.window(Seconds(5), Seconds(5))
+  val entries5sWindowedStream = entriesStream.window(bumpInterval, bumpInterval)
 
   val accel5sWindowedStream = accelerationStream(entries5sWindowedStream)
   val hAttitudesin5sWindowedStream = attitudeHistoryStream(attitudeStream(entries5sWindowedStream))
@@ -59,11 +61,16 @@ object StreamDriver extends App with IOFTConfig {
   //val bumpStream = averageOutlierBumpDetector(accel5sWindowedStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 5.0)
   //val bumpStream = naiveBumpDetector(accelStream)
 
-  bumpStream.foreachRDD(_.foreach(x => println(s"PEAK!!$x")))
+  val groupedBumps = bumpStream map { case (id, (ts, accel)) => (id, ts/2000) -> (ts, accel) } reduceByKey { (a, b) =>
+    Seq(a, b).maxBy(contester => math.abs(contester._2))
+  }
+
   //normalizedAccel5sWindowedStream.foreachRDD(_.foreach(x => println(x)))
 
+  groupedBumps.foreachRDD(_.foreach(x => println(s"PEAK!!$x")))
+
   val desiredAttitude = desiredAttitudeStream(entriesStream)
-  desiredAttitude.foreachRDD(_.foreach(x => println(s"Desired Attitude: $x")))
+  //desiredAttitude.foreachRDD(_.foreach(x => println(s"Desired Attitude: $x")))
 
 
   /*
