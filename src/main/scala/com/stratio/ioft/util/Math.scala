@@ -53,9 +53,9 @@ object Math {
     def transpose[T](m: Vector[Vector[T]]): Vector[Vector[T]] = m.transpose
 
     def multiply[T <% Numeric[T]](A: Vector[Vector[T]], B: Vector[Vector[T]]): Vector[Vector[T]] = {
-      require(A.length == B.head.length)
+      require(A.head.length == B.length)
       for(i <- (0 until A.length).toVector) yield {
-        for(j <- (0 until A.head.length).toVector) yield
+        for(j <- (0 until B.head.length).toVector) yield
           (A.head.head.sumIdentity /: (0 until A.length)) { (s: T, t) =>
             s + A(i)(t)*B(t)(j)
           }
@@ -75,11 +75,8 @@ object Math {
 
   object Geometry {
 
-    import scala.math.{Pi, sin, cos}
-    import Implicits.Numeric
+    import scala.math.{sin, cos}
     import LinAlg._
-
-    def degrees2rads(degrees: Double): Double = Pi*degrees/180.0
 
     def rotateAboutX(rads: Double, v: Vector[Double]): Vector[Double] = {
       val rotMatrix = Vector(

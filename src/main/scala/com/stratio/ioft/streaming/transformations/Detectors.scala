@@ -1,33 +1,12 @@
-package com.stratio.ioft
+package com.stratio.ioft.streaming.transformations
 
+import com.stratio.ioft.domain.DroneIdType
 import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
-import org.apache.spark.{Partition, TaskContext}
-import org.apache.spark.annotation.DeveloperApi
+import com.stratio.ioft.domain.measures.{Acceleration, Attitude}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
-import org.apache.spark.util.StatCounter
 
 object Detectors {
-
-  type DroneIdType = String
-
-  def accelerationStream(
-                          entriesStream: DStream[(DroneIdType, Entry)]
-                        ): DStream[(DroneIdType, (BigInt, (Double, Double, Double)))] = {
-    entriesStream.flatMapValues {
-      case Entry(fields: List[Field@unchecked], ts, _, _, "AccelState", _) =>
-        val dimVals = fields collect {
-          case Field(dim, _, "m/s^2", Value(_, v: Double) :: _) => dim -> v
-        }
-        // The three dimensions get ordered by their names: x, y and z and then tupled and combined with timestamp
-        dimVals.sortBy(_._1).map(_._2) match {
-          case Seq(x, y, z) => Some(ts -> (x, y, z))
-          case _ => None
-        }
-      case _ => Seq()
-    }
-  }
-
 
   def naiveBumpDetector(
                          zAccelStream: DStream[(DroneIdType, (BigInt, Double))]

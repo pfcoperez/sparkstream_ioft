@@ -1,11 +1,26 @@
 package com.stratio.ioft
 
+<<<<<<< HEAD
 import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
 import com.stratio.ioft.persistence.CassandraPersistence._
 import com.stratio.ioft.serialization.json4s.librePilotSerializers
 import com.stratio.ioft.settings.IOFTConfig
 import com.stratio.ioft.Detectors._
 import com.stratio.ioft.persistence.PrimaryKey
+=======
+import com.stratio.ioft.domain.DroneIdType
+import com.stratio.ioft.domain.LibrePilot.Entry
+import com.stratio.ioft.domain.measures.Acceleration
+
+import com.stratio.ioft.streaming.transformations._
+import Detectors._
+import Aggregators._
+import Combinators._
+import Sources._
+
+import com.stratio.ioft.serialization.json4s.librePilotSerializers
+import com.stratio.ioft.settings.IOFTConfig
+
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.{Seconds, StreamingContext}
@@ -13,6 +28,7 @@ import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
 
 import scala.collection.immutable.ListMap
+
 
 object StreamDriver extends App with IOFTConfig {
 
@@ -38,11 +54,21 @@ object StreamDriver extends App with IOFTConfig {
 
   implicit val formats = DefaultFormats ++ librePilotSerializers
 
+  val bumpInterval = Seconds(5)
+
   val entriesStream = rawInputStream.mapValues(parse(_).extract[Entry])
+  val entries5sWindowedStream = entriesStream.window(bumpInterval, bumpInterval)
 
-  val accelStream = accelerationStream(entriesStream.window(Seconds(5), Seconds(5)))
+  val accel5sWindowedStream = accelerationStream(entries5sWindowedStream)
+  val hAttitudesin5sWindowedStream = attitudeHistoryStream(attitudeStream(entries5sWindowedStream))
 
-  val bumpStream = averageOutlierBumpDetector(accelStream.mapValues { case (ts, (x,y,z)) => ts -> z }, 5.0)
+  val normalizedAccel5sWindowedStream:  DStream[(DroneIdType, (BigInt, Acceleration))] =
+    normalizedAccelerationStream(accel5sWindowedStream, hAttitudesin5sWindowedStream)
+
+  val bumpStream = averageOutlierBumpDetector(
+    normalizedAccel5sWindowedStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 5.0, 1.0
+  )
+  //val bumpStream = averageOutlierBumpDetector(accel5sWindowedStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 5.0)
   //val bumpStream = naiveBumpDetector(accelStream)
 
   /*
@@ -62,6 +88,18 @@ object StreamDriver extends App with IOFTConfig {
 
   bumpStream.foreachRDD(_.foreach(x => println(s"PEAK!!$x")))
   //accelStream.foreachRDD(_.foreach(x => println(x)))
+
+  val groupedBumps = bumpStream map { case (id, (ts, accel)) => (id, ts/2000) -> (ts, accel) } reduceByKey { (a, b) =>
+    Seq(a, b).maxBy(contester => math.abs(contester._2))
+  }
+
+  //normalizedAccel5sWindowedStream.foreachRDD(_.foreach(x => println(x)))
+
+  groupedBumps.foreachRDD(_.foreach(x => println(s"PEAK!!$x")))
+
+  val desiredAttitude = desiredAttitudeStream(entriesStream)
+  //desiredAttitude.foreachRDD(_.foreach(x => println(s"Desired Attitude: $x")))
+
 
   /*
   /**
