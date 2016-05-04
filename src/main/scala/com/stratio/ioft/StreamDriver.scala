@@ -59,13 +59,13 @@ object StreamDriver extends App with IOFTConfig {
   //val bumpStream = naiveBumpDetector(accelStream)
 
 
-  val bumpColNames = Array("droneID", "event_time", "axis_accel")
-
   val bumpTableName = "peaks"
+
+  val bumpColNames = Array("droneID", "event_time", "axis_accel")
 
   bumpStream.map(peak => (peak._1, peak._2._1, peak._2._2)).foreachRDD(rdd => {
     if (rdd.isEmpty){
-      println("No pattern found")
+      println("No peak found")
     } else {
       createTable(
         bumpTableName,
@@ -80,7 +80,7 @@ object StreamDriver extends App with IOFTConfig {
   })
 
 
-  //bumpStream.foreachRDD(_.foreach(x => println(s"PEAK!!$x")))
+  //bumpStream.foreachRDD(_.foreach(x => println(s"PEAK!! $x")))
   //accelStream.foreachRDD(_.foreach(x => println(x)))
 
   val groupedBumps = bumpStream map { case (id, (ts, accel)) => (id, ts/2000) -> (ts, accel) } reduceByKey { (a, b) =>
@@ -89,14 +89,14 @@ object StreamDriver extends App with IOFTConfig {
 
   //normalizedAccel5sWindowedStream.foreachRDD(_.foreach(x => println(x)))
 
-  val groupedBumpColNames = Array("droneID", "event_time", "axis_accel")
-
   val groupedBumpTableName = "groupedpeaks"
+
+  val groupedBumpColNames = Array("droneID", "event_time", "axis_accel")
 
   groupedBumps.foreachRDD(_.foreach(x => println(s"GROUPED PEAK!!$x")))
   groupedBumps.map(peak => (peak._1._1, peak._2._1, peak._2._2)).foreachRDD(rdd => {
     if (rdd.isEmpty){
-      println("No pattern found")
+      println("No grouped peak found")
     } else {
       createTable(
         groupedBumpTableName,
@@ -104,14 +104,84 @@ object StreamDriver extends App with IOFTConfig {
         PrimaryKey(Array("DroneID"), Array("event_time")),
         rdd.take(1).head)
       rdd.foreach(x => {
-        println(s"GROUPED PEAK!!$x")
+        println(s"GROUPED PEAK!! $x")
         persist(groupedBumpTableName, groupedBumpColNames, x)
       })
     }
   })
 
+
   val desiredAttitude = desiredAttitudeStream(entriesStream)
   //desiredAttitude.foreachRDD(_.foreach(x => println(s"Desired Attitude: $x")))
+
+  val desiredTableName = "desiredattitude"
+
+  val desiredColNames = Array("droneID", "event_time", "pitch", "roll", "yaw")
+
+  desiredAttitude.map(att => (att._1, att._2._1, att._2._2.pitch, att._2._2.roll, att._2._2.yaw)).foreachRDD(rdd => {
+    if (rdd.isEmpty){
+      println("No desired attitude found")
+    } else {
+      createTable(
+        desiredTableName,
+        desiredColNames,
+        PrimaryKey(Array("DroneID"), Array("event_time")),
+        rdd.take(1).head)
+      rdd.foreach(x => {
+        println(s"DESIRED ATTITUDE!! $x")
+        persist(desiredTableName, desiredColNames, x)
+      })
+    }
+  })
+
+
+
+  val actualAttitude = attitudeStream(entriesStream)
+  //actualAttitude.foreachRDD(_.foreach(x => println(s"Desired Attitude: $x")))
+
+  val actualTableName = "actualattitude"
+
+  val actualColNames = Array("droneID", "event_time", "pitch", "roll", "yaw")
+
+  actualAttitude.map(att => (att._1, att._2._1, att._2._2.pitch, att._2._2.roll, att._2._2.yaw)).foreachRDD(rdd => {
+    if (rdd.isEmpty){
+      println("No actual attitude found")
+    } else {
+      createTable(
+        actualTableName,
+        actualColNames,
+        PrimaryKey(Array("DroneID"), Array("event_time")),
+        rdd.take(1).head)
+      rdd.foreach(x => {
+        println(s"ACTUAL ATTITUDE!! $x")
+        persist(actualTableName, actualColNames, x)
+      })
+    }
+  })
+
+
+  val acceleration = accelerationStream(entriesStream)
+  //acceleration.foreachRDD(_.foreach(x => println(s"Acceleration: $x")))
+
+  val accelerationTableName = "acceleration"
+
+  val accelerationColNames = Array("droneID", "event_time", "x", "y", "z")
+
+  acceleration.map(att => (att._1, att._2._1, att._2._2.x, att._2._2.y, att._2._2.z)).foreachRDD(rdd => {
+    if (rdd.isEmpty){
+      println("No acceleration found")
+    } else {
+      createTable(
+        accelerationTableName,
+        accelerationColNames,
+        PrimaryKey(Array("DroneID"), Array("event_time")),
+        rdd.take(1).head)
+      rdd.foreach(x => {
+        println(s"ACCELERATION!! $x")
+        persist(accelerationTableName, accelerationColNames, x)
+      })
+    }
+  })
 
 
   sc.start()
