@@ -2,7 +2,7 @@ package com.stratio.ioft
 
 import com.stratio.ioft.domain.DroneIdType
 import com.stratio.ioft.domain.LibrePilot.Entry
-import com.stratio.ioft.domain.measures.Acceleration
+import com.stratio.ioft.domain.measures.{Acceleration, Attitude}
 import com.stratio.ioft.persistence.CassandraPersistence._
 import com.stratio.ioft.persistence.PrimaryKey
 import com.stratio.ioft.serialization.json4s.librePilotSerializers
@@ -135,7 +135,6 @@ object StreamDriver extends App with IOFTConfig {
   })
 
 
-
   val actualAttitude = attitudeStream(entriesStream)
   //actualAttitude.foreachRDD(_.foreach(x => println(s"Desired Attitude: $x")))
 
@@ -159,6 +158,11 @@ object StreamDriver extends App with IOFTConfig {
     }
   })
 
+  val threshold = 20
+  val correctedAttitude = desiredAttitude.join(actualAttitude).filter(row =>
+    (row._2._2._1.longValue - row._2._1._1.longValue) < threshold
+  )
+  correctedAttitude.foreachRDD(_.foreach(x => println(s"Corrected Attitude: $x")))
 
   val acceleration = accelerationStream(entriesStream)
   //acceleration.foreachRDD(_.foreach(x => println(s"Acceleration: $x")))
