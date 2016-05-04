@@ -1,10 +1,16 @@
 package com.stratio.ioft.persistence
 
 import com.datastax.driver.core._
+import com.datastax.driver.core.exceptions.{NoHostAvailableException, QueryExecutionException, QueryValidationException, UnsupportedFeatureException}
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.stratio.ioft.settings.IOFTConfig
 
+import scala.collection.JavaConversions._
+
+
 object CassandraPersistence extends IOFTConfig {
+
+  val IOFTKeyspace = "ioft"
 
   val cluster = Cluster.builder
     .addContactPoint(cassandraConfig.getString("source.host"))
@@ -12,14 +18,24 @@ object CassandraPersistence extends IOFTConfig {
 
   val session = cluster.connect
 
-  session.execute("CREATE KEYSPACE IF NOT EXISTS ioft WITH REPLICATION = {'class' : 'SimpleStrategy', 'replication_factor' : 1}")
+  session.execute(s"CREATE KEYSPACE IF NOT EXISTS $IOFTKeyspace WITH REPLICATION = {'class' : 'SimpleStrategy', 'replication_factor' : 1}")
+
+  println(s"Current keyspace: ${session.getLoggedKeyspace}")
+
+  session.execute(s"USE $IOFTKeyspace")
+
+  println(s"Current keyspace: ${session.getLoggedKeyspace}")
 
   def inferSchema(colNames: Array[String], row: Product): Iterator[String] = {
-    for{x <- colNames.iterator; y <- row.productIterator} yield s"$x: ${transformToCqlType(y.getClass)}"
+    val y = row.productIterator
+    for{x <- colNames.iterator} yield {
+      s"$x ${transformToCqlType(y.next.getClass)}"
+    }
   }
 
   def transformToCqlType(incomingType: Class[_]): String = {
     incomingType.getSimpleName.toLowerCase match {
+      case "string" => "TEXT"
       case "bool" => "BOOLEAN"
       case "long" => "BIGINT"
       case "integer" => "INT"
@@ -29,15 +45,64 @@ object CassandraPersistence extends IOFTConfig {
 
   def createTable(tableName: String, colNames: Array[String], pk: PrimaryKey, row: Product) = {
     val schema = inferSchema(colNames, row)
-    session.execute(s"CREATE TABLE IF NOT EXISTS ioft.$tableName (${schema.mkString}, PRIMARY KEY ($pk))")
+    try {
+      val query = s"CREATE TABLE IF NOT EXISTS $IOFTKeyspace.$tableName (${schema.mkString(", ")}, PRIMARY KEY ($pk))"
+      println(s"Query: $query")
+      session.execute(query)
+    } catch {
+      case nhae: NoHostAvailableException => println(s"${nhae.getCustomMessage(1, true, false)}")
+      case qee: QueryExecutionException => println(s"${qee.getMessage}")
+      case qve: QueryValidationException => println(s"${qve.getMessage}")
+      case other => println(s"Other: $other")
+    }
+
+  }
+
+  def adaptToCQLTypes(content: Any): Object = {
+    content match {
+      case c: BigInt => c.bigInteger.longValue().asInstanceOf[java.lang.Long]
+      case other => other.asInstanceOf[Object]
+    }
   }
 
   def persist(tableName: String, colNames: Array[String], data: Product) = {
     val array = new Array[Object](colNames.length)
+    var pos = 0
     for(i <- data.productIterator){
-      array(array.size) = i.asInstanceOf[Object]
+      array(pos) = adaptToCQLTypes(i)
+      pos+=1
     }
-    QueryBuilder.insertInto(tableName).values(colNames, array)
+    val statement = QueryBuilder.insertInto(tableName).values(colNames, array)
+    try {
+      session.execute(statement)
+    } catch {
+      case nhae: NoHostAvailableException => println(s"${nhae.getCustomMessage(1, true, false)}")
+      case qee: QueryExecutionException => println(s"${qee.getMessage}")
+      case qve: QueryValidationException => println(s"${qve.getMessage}")
+      case ufe: UnsupportedFeatureException => println(s"${ufe.getMessage}")
+      case other => println(s"Other: $other")
+    }
+  }
+
+  def truncate(name: String) = {
+    try {
+      session.execute(s"TRUNCATE $IOFTKeyspace.$name")
+      println(s"Table $IOFTKeyspace.$name truncated")
+    } catch {
+      case nhae: NoHostAvailableException => println(s"${nhae.getCustomMessage(1, true, false)}")
+      case qee: QueryExecutionException => println(s"${qee.getMessage}")
+      case qve: QueryValidationException => println(s"${qve.getMessage}")
+      case ufe: UnsupportedFeatureException => println(s"${ufe.getMessage}")
+      case other => println(s"Other: $other")
+    }
+  }
+
+  def truncateData() = {
+    val ksMetadata = Option(session.getCluster.getMetadata.getKeyspace(IOFTKeyspace))
+    ksMetadata match {
+      case Some(m) => m.getTables.foreach(t => truncate(t.getName))
+      case other => println(s"Keyspace '$IOFTKeyspace' not created")
+    }
   }
 
 }
