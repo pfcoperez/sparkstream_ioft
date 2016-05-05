@@ -2,8 +2,9 @@ package com.stratio.ioft.domain.measures
 
 object Attitude {
   case class AttitudeRange(maxMagnitude: Double) {
-    def rangePercentage(v: Double): Double = v*100.0/maxMagnitude
-    def proportionalValue(p: Double): Double = p*maxMagnitude/100.0
+    private val scaleFactor = -2.0
+    def rangePercentage(v: Double): Double = v*scaleFactor/maxMagnitude
+    def proportionalValue(p: Double): Double = p*maxMagnitude/scaleFactor
     def contains(v: Double): Boolean = math.abs(v) <= maxMagnitude
   }
 
