@@ -13,7 +13,7 @@ import com.stratio.ioft.streaming.transformations.Detectors._
 import com.stratio.ioft.streaming.transformations.Sources._
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.dstream.DStream
-import org.apache.spark.streaming.{Seconds, StreamingContext}
+import org.apache.spark.streaming.{Milliseconds, Seconds, StreamingContext}
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
 
@@ -27,7 +27,7 @@ object StreamDriver extends App with IOFTConfig {
 
   val conf = new SparkConf() setMaster(sparkConfig.getString("master")) setAppName(sparkConfig.getString("appName"))
 
-  val sc = new StreamingContext(conf, Seconds(sparkStreamingConfig.getLong("batchDuration")))
+  val sc = new StreamingContext(conf, Milliseconds(sparkStreamingConfig.getLong("batchDuration")))
 
   //sc.sparkContext.setLogLevel("ERROR")
 
@@ -58,6 +58,14 @@ object StreamDriver extends App with IOFTConfig {
   //val bumpStream = averageOutlierBumpDetector(accel5sWindowedStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 5.0)
   //val bumpStream = naiveBumpDetector(accelStream)
 
+  val desiredAttdStream = desiredAttitudeStream(entriesStream)
+  val desiredAndActualAttds = desiredAndActualAttitudeStream(desiredAttdStream, attitudeStream(entriesStream), 250)
+
+  desiredAndActualAttds.foreachRDD(_.foreach {
+    case (_, (ts, Attitude(_, pitchd, _), Attitude(_, pitcha, _))) /*if(pitchd != pitcha)*/ =>
+      println(s"DESIRED vs ACTUAL: ($ts, $pitchd, $pitcha)")
+    case _ =>
+  })
 
   val bumpTableName = "peaks"
 
