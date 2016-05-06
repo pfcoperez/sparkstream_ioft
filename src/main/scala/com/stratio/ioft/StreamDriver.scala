@@ -168,11 +168,38 @@ object StreamDriver extends App with IOFTConfig {
     }
   })
 
+  /*
   val threshold = 20
   val correctedAttitude = desiredAttitude.join(actualAttitude).filter(row =>
     (row._2._2._1.longValue - row._2._1._1.longValue) < threshold
   )
   correctedAttitude.foreachRDD(_.foreach(x => println(s"Corrected Attitude: $x")))
+  */
+
+  val range = 250
+  val desiredActualAttitude = desiredAndActualAttitudeStream(desiredAttitude, actualAttitude, range)
+  //actualAttitude.foreachRDD(_.foreach(x => println(s"Desired Attitude: $x")))
+
+  val desiredActualTableName = "desiredactualattitude"
+
+  val desiredActualColNames = Array("droneID", "event_time", "d_pitch", "d_roll", "d_yaw", "a_pitch", "a_roll", "a_yaw")
+
+
+  desiredActualAttitude.map(att => (att._1, att._2._1, att._2._2.pitch, att._2._2.roll, att._2._2.yaw, att._2._3.pitch, att._2._3.roll, att._2._3.yaw)).foreachRDD(rdd => {
+    if (rdd.isEmpty){
+      println("No desired/actual attitude found")
+    } else {
+      createTable(
+        desiredActualTableName,
+        desiredActualColNames,
+        PrimaryKey(Array("DroneID"), Array("event_time")),
+        rdd.take(1).head)
+      rdd.foreach(x => {
+        println(s"DESIRED/ACTUAL ATTITUDE!! $x")
+        persist(desiredActualTableName, desiredActualColNames, x)
+      })
+    }
+  })
 
   val acceleration = accelerationStream(entriesStream)
   //acceleration.foreachRDD(_.foreach(x => println(s"Acceleration: $x")))
