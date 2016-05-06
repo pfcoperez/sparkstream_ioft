@@ -174,11 +174,11 @@ object StreamDriver extends App with IOFTConfig {
   correctedAttitude.foreachRDD(_.foreach(x => println(s"Corrected Attitude: $x")))
   */
 
-  val range = 200
+  val range = 250
   val desiredActualAttitude = desiredAndActualAttitudeStream(desiredAttitude, actualAttitude, range)
   //actualAttitude.foreachRDD(_.foreach(x => println(s"Desired Attitude: $x")))
 
-  val desiredActualTableName = "actualattitude"
+  val desiredActualTableName = "desiredactualattitude"
 
   val desiredActualColNames = Array("droneID", "event_time", "d_pitch", "d_roll", "d_yaw", "a_pitch", "a_roll", "a_yaw")
 
