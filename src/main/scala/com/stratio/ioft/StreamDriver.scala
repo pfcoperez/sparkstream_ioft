@@ -111,10 +111,12 @@ object StreamDriver extends App with IOFTConfig {
         groupedBumpColNames,
         PrimaryKey(Array("DroneID"), Array("event_time")),
         rdd.take(1).head)
-      rdd.foreach(x => {
-        println(s"GROUPED PEAK!! $x")
-        persist(groupedBumpTableName, groupedBumpColNames, x)
-      })
+      rdd.foreach {
+        case (dId, ts: BigInt, zaccel) =>
+          val x = (dId, (ts/1500)*1500, zaccel)
+          println(s"GROUPED PEAK!! $x")
+          persist(groupedBumpTableName, groupedBumpColNames, x)
+      }
     }
   })
 
