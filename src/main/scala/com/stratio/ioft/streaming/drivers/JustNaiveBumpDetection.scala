@@ -1,6 +1,5 @@
 package com.stratio.ioft.streaming.drivers
 
-import com.stratio.ioft.StreamDriver._
 import com.stratio.ioft.domain.LibrePilot.Entry
 import com.stratio.ioft.domain._
 import com.stratio.ioft.domain.measures.Acceleration
@@ -8,12 +7,16 @@ import com.stratio.ioft.streaming.transformations.Detectors._
 import com.stratio.ioft.streaming.transformations.Sources._
 import com.stratio.ioft.util.PresentationTools
 import com.stratio.ioft.serialization.json4s._
+import com.stratio.ioft.settings.IOFTConfig
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.{Milliseconds, Seconds, StreamingContext}
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
 
-object NaiveBumpJustDetection extends App with PresentationTools {
+object JustNaiveBumpDetection extends App
+  with IOFTConfig
+  with PresentationTools {
+
   import org.apache.log4j.{Level, Logger}
 
   Logger.getLogger("org").setLevel(Level.ERROR)
