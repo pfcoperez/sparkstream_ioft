@@ -20,11 +20,11 @@ object CassandraPersistence extends IOFTConfig {
 
   session.execute(s"CREATE KEYSPACE IF NOT EXISTS $IOFTKeyspace WITH REPLICATION = {'class' : 'SimpleStrategy', 'replication_factor' : 1}")
 
-  println(s"Current keyspace: ${session.getLoggedKeyspace}")
+  //println(s"Current keyspace: ${session.getLoggedKeyspace}")
 
   session.execute(s"USE $IOFTKeyspace")
 
-  println(s"Current keyspace: ${session.getLoggedKeyspace}")
+  //println(s"Current keyspace: ${session.getLoggedKeyspace}")
 
   def inferSchema(colNames: Array[String], row: Product): Iterator[String] = {
     val y = row.productIterator
@@ -47,7 +47,7 @@ object CassandraPersistence extends IOFTConfig {
     val schema = inferSchema(colNames, row)
     try {
       val query = s"CREATE TABLE IF NOT EXISTS $IOFTKeyspace.$tableName (${schema.mkString(", ")}, PRIMARY KEY ($pk))"
-      println(s"Query: $query")
+      //println(s"Query: $query")
       session.execute(query)
     } catch {
       case nhae: NoHostAvailableException => println(s"${nhae.getCustomMessage(1, true, false)}")

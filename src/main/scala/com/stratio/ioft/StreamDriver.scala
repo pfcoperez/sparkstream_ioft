@@ -63,7 +63,7 @@ object StreamDriver extends App with IOFTConfig {
 
   desiredAndActualAttds.foreachRDD(_.foreach {
     case (_, (ts, Attitude(_, pitchd, _), Attitude(_, pitcha, _))) /*if(pitchd != pitcha)*/ =>
-      println(s"DESIRED vs ACTUAL: ($ts, $pitchd, $pitcha)")
+      //println(s"DESIRED vs ACTUAL: ($ts, $pitchd, $pitcha)")
     case _ =>
   })
 
@@ -73,7 +73,7 @@ object StreamDriver extends App with IOFTConfig {
 
   bumpStream.map(peak => (peak._1, peak._2._1, peak._2._2)).foreachRDD(rdd => {
     if (rdd.isEmpty){
-      println("No peak found")
+      //println("No peak found")
     } else {
       createTable(
         bumpTableName,
@@ -104,7 +104,7 @@ object StreamDriver extends App with IOFTConfig {
   groupedBumps.foreachRDD(_.foreach(x => println(s"GROUPED PEAK!!$x")))
   groupedBumps.map(peak => (peak._1._1, peak._2._1, peak._2._2)).foreachRDD(rdd => {
     if (rdd.isEmpty){
-      println("No grouped peak found")
+      //println("No grouped peak found")
     } else {
       createTable(
         groupedBumpTableName,
@@ -130,7 +130,7 @@ object StreamDriver extends App with IOFTConfig {
 
   desiredAttitude.map(att => (att._1, att._2._1, att._2._2.pitch, att._2._2.roll, att._2._2.yaw)).foreachRDD(rdd => {
     if (rdd.isEmpty){
-      println("No desired attitude found")
+      //println("No desired attitude found")
     } else {
       createTable(
         desiredTableName,
@@ -138,7 +138,7 @@ object StreamDriver extends App with IOFTConfig {
         PrimaryKey(Array("DroneID"), Array("event_time")),
         rdd.take(1).head)
       rdd.foreach(x => {
-        println(s"DESIRED ATTITUDE!! $x")
+        //println(s"DESIRED ATTITUDE!! $x")
         persist(desiredTableName, desiredColNames, x)
       })
     }
@@ -154,7 +154,7 @@ object StreamDriver extends App with IOFTConfig {
 
   actualAttitude.map(att => (att._1, att._2._1, att._2._2.pitch, att._2._2.roll, att._2._2.yaw)).foreachRDD(rdd => {
     if (rdd.isEmpty){
-      println("No actual attitude found")
+      //println("No actual attitude found")
     } else {
       createTable(
         actualTableName,
@@ -162,7 +162,7 @@ object StreamDriver extends App with IOFTConfig {
         PrimaryKey(Array("DroneID"), Array("event_time")),
         rdd.take(1).head)
       rdd.foreach(x => {
-        println(s"ACTUAL ATTITUDE!! $x")
+        //println(s"ACTUAL ATTITUDE!! $x")
         persist(actualTableName, actualColNames, x)
       })
     }
@@ -187,7 +187,7 @@ object StreamDriver extends App with IOFTConfig {
 
   desiredActualAttitude.map(att => (att._1, att._2._1, att._2._2.pitch, att._2._2.roll, att._2._2.yaw, att._2._3.pitch, att._2._3.roll, att._2._3.yaw)).foreachRDD(rdd => {
     if (rdd.isEmpty){
-      println("No desired/actual attitude found")
+      //println("No desired/actual attitude found")
     } else {
       createTable(
         desiredActualTableName,
@@ -201,6 +201,7 @@ object StreamDriver extends App with IOFTConfig {
     }
   })
 
+  /*
   val acceleration = accelerationStream(entriesStream)
   //acceleration.foreachRDD(_.foreach(x => println(s"Acceleration: $x")))
 
@@ -210,7 +211,7 @@ object StreamDriver extends App with IOFTConfig {
 
   acceleration.map(att => (att._1, att._2._1, att._2._2.x, att._2._2.y, att._2._2.z)).foreachRDD(rdd => {
     if (rdd.isEmpty){
-      println("No acceleration found")
+      //println("No acceleration found")
     } else {
       createTable(
         accelerationTableName,
@@ -218,12 +219,12 @@ object StreamDriver extends App with IOFTConfig {
         PrimaryKey(Array("DroneID"), Array("event_time")),
         rdd.take(1).head)
       rdd.foreach(x => {
-        println(s"ACCELERATION!! $x")
+        //println(s"ACCELERATION!! $x")
         persist(accelerationTableName, accelerationColNames, x)
       })
     }
   })
-
+  */
 
   sc.start()
   sc.awaitTermination
