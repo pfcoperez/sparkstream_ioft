@@ -5,8 +5,17 @@ import com.stratio.ioft.domain._
 import com.stratio.ioft.domain.measures.{Acceleration, Attitude}
 import org.apache.spark.streaming.dstream.DStream
 
+/**
+  * Transformations over input streams aimed to provide a concrete data SOURCES by extracting
+  * high level flight details.
+  */
 object Sources {
 
+  /**
+    * Extracts detected (actual) attitude events from the, translated from json, entries stream.
+    * @param entriesStream
+    * @return Actual attitude events extracted from the low level entries stream.
+    */
   def attitudeStream(
                       entriesStream: DStream[(DroneIdType, Entry)]
                     ): DStream[(DroneIdType, (BigInt, Attitude))] =
@@ -24,6 +33,12 @@ object Sources {
       case _ => Seq()
     }
 
+  /**
+    * Extracts desired attitude events. Desired means the pilot commands combined with the decision taken by the
+    * flight control stabilizer. That is, the attitude the drone should have.
+    * @param entriesStream
+    * @return Desired attitude events.
+    */
   def desiredAttitudeStream(
                       entriesStream: DStream[(DroneIdType, Entry)]
                     ): DStream[(DroneIdType, (BigInt, Attitude))] =
@@ -49,6 +64,11 @@ object Sources {
       case _ => Seq()
     }
 
+  /**
+    * Extracts detected measured acceleration events from the, translated from json, entries stream.
+    * @param entriesStream
+    * @return Measured acceleration events extracted from the low level entries stream.
+    */
   def accelerationStream(
                           entriesStream: DStream[(DroneIdType, Entry)]
                         ): DStream[(DroneIdType, (BigInt, Acceleration))] =

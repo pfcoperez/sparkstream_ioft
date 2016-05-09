@@ -12,6 +12,13 @@ import org.apache.spark.streaming.Milliseconds
 
 object Combinators {
 
+  /**
+    * Combines historial frame attitude data with acceleration values so acceleration vectors get rotated by their
+    * closest attitude angles. This way acceleration vectors reference frame is not the drone itself but earth.
+    * @param accelerationStream In a timeframe or window
+    * @param attitudeHistoryStream In the very same window than `accelerationStream`.
+    * @return
+    */
   def normalizedAccelerationStream(
                                     accelerationStream: DStream[(DroneIdType, (BigInt, Acceleration))],
                                     attitudeHistoryStream: DStream[(DroneIdType, AttitudeHistory)]
@@ -27,6 +34,14 @@ object Combinators {
         }
     }
 
+  /**
+    * Combines actual and desired actitudes into a single event stream
+    *
+    * @param desiredAttitudeStream
+    * @param attitudeStream
+    * @param timeRange
+    * @return
+    */
   def desiredAndActualAttitudeStream(
                                       desiredAttitudeStream: DStream[(DroneIdType, (BigInt, Attitude))],
                                       attitudeStream: DStream[(DroneIdType, (BigInt, Attitude))],

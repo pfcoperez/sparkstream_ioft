@@ -8,6 +8,11 @@ import org.apache.spark.streaming.dstream.DStream
 
 object Aggregators {
 
+  /**
+    * Combines all entries within a window into a single event containing its time frame attitude history
+    * @param attitudeStream windowed by a time frame of interest
+    * @return
+    */
   def attitudeHistoryStream(
                              attitudeStream: DStream[(DroneIdType, (BigInt, Attitude))]
                            ): DStream[(DroneIdType, AttitudeHistory)] =
