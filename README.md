@@ -1,9 +1,6 @@
 # Internet Of Flying Things
 
-## Elasticsearch commands
-
-### Create index
-curl -XPUT 'http://localhost:9200/ioft/'
+This project is a PoC whereby we succesfully test whether is possible to analyze the collective behaviour of a UAV fleet using Big Data streaming tools. Namely Spark Streaming.
 
 ## Input
 
@@ -49,7 +46,7 @@ The following example:
         {
           "name": "0", 
           "value": 13.041015625
-        }l
+        }
       ]
     }
   ], 
