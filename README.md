@@ -2,6 +2,29 @@
 
 This project is a PoC whereby we succesfully test whether is possible to analyze the collective behaviour of a UAV fleet using Big Data streaming tools. Namely Spark Streaming.
 
+## Where to start reading this code?
+
+It seems a good a idea to start with the Spark Streaming applications where streams are created and combined in different ways to show the transformations providing detection algorithms, how the latter works and how their generated events can be persisted into Cassandra.
+
+All these Spark Streaming drivers belong to `com.stratio.ioft.streaming.drivers` package. There are two types of apps: Demonstration drivers and a main application which covers many cases and includes persistence.
+
+- [JustNaiveBumpDetection:](https://github.com/pfcoperez/sparkstream_ioft/blob/master/src/main/scala/com/stratio/ioft/streaming/drivers/JustNaiveBumpDetection.scala) Uses naive detection algorithm to detect bumps.
+- [JustOutliersBasedBumpDetection](https://github.com/pfcoperez/sparkstream_ioft/blob/master/src/main/scala/com/stratio/ioft/streaming/drivers/JustOutliersBasedBumpDetection.scala) Improves the results of the previous app by using per window simple statistical analysis.
+- [NormalizedOutliersBasedBumpDetection](https://github.com/pfcoperez/sparkstream_ioft/blob/master/src/main/scala/com/stratio/ioft/streaming/drivers/NormalizedOutliersBasedBumpDetection.scala) Same as `JustOutliersBasedBumpDetection` but normalizing acceleration vectors frame of reference.
+
+And, finally, the full-stack driver: 
+
+- [CompleteFlowWithPersistence](https://github.com/pfcoperez/sparkstream_ioft/blob/master/src/main/scala/com/stratio/ioft/streaming/drivers/CompleteFlowWithPersistence.scala)
+
+## Stream sources and transformations 
+
+The building blocks of the aforementioned Spark Streaming drivers (applications) can be found under `com.stratio.ioft.streaming.transformations` package. It contains a set of objects with functions to build, compose and transform streams:
+
+- At [Sources](https://github.com/pfcoperez/sparkstream_ioft/blob/master/src/main/scala/com/stratio/ioft/streaming/transformations/Sources.scala) are deffined those methods which extract high level objects from an `Entry` stream.
+- [Aggregators](https://github.com/pfcoperez/sparkstream_ioft/blob/master/src/main/scala/com/stratio/ioft/streaming/transformations/Aggregators.scala) contains methods to aggregate sets of events within a window into a smaller set of events. e.g: All actittuve events within a window can be transformed into a single history event sumarizing what happened during the window.
+- [Combinators](https://github.com/pfcoperez/sparkstream_ioft/blob/master/src/main/scala/com/stratio/ioft/streaming/transformations/Combinators.scala)
+- Find at [Detectors](https://github.com/pfcoperez/sparkstream_ioft/blob/master/src/main/scala/com/stratio/ioft/streaming/transformations/Detectors.scala) the transformations needed to located x-axis bumps.
+
 ## Input
 
 ### Attitude
