@@ -4,7 +4,7 @@ This project is a PoC whereby we succesfully test whether is possible to analyze
 
 ## Where to start reading this code?
 
-It seems a good a idea to start with the Spark Streaming applications where streams are created and combined in different ways to show the transformations providing detection algorithms, how the latter works and how their generated events can be persisted into Cassandra.
+It seems a good a idea to start with the Spark Streaming applications where streams are created and combined in different ways to show the transformations providing detection algorithms, how the latter work and how their generated events can be persisted into Cassandra.
 
 All these Spark Streaming drivers belong to `com.stratio.ioft.streaming.drivers` package. There are two types of apps: Demonstration drivers and a main application which covers many cases and includes persistence.
 
