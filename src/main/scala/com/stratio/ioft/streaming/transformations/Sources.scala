@@ -33,6 +33,7 @@ object Sources {
       case _ => Seq()
     }
 
+
   /**
     * Extracts desired attitude events. Desired means the pilot commands combined with the decision taken by the
     * flight control stabilizer. That is, the attitude the drone should have.
@@ -40,29 +41,21 @@ object Sources {
     * @return Desired attitude events.
     */
   def desiredAttitudeStream(
-                      entriesStream: DStream[(DroneIdType, Entry)]
-                    ): DStream[(DroneIdType, (BigInt, Attitude))] =
-    entriesStream.flatMapValues {
-      case Entry(fields: List[Field @ unchecked], ts, _, _, "ActuatorDesired", _) =>
+                             entriesStream: DStream[(DroneIdType, Entry)]
+                           ): DStream[(DroneIdType, (BigInt, Attitude))] =
+    desiredStream(entriesStream) mapValues { case (ts, attitude, thrust) => (ts, attitude) }
 
-        val dimVals = fields collect {
-          case Field(dim, _, "%", Value(_, v: Double) :: _) => dim -> v
-        } toMap
+  /**
+    * Extracts desired thrust event. Desired means the pilot commands combined with the decision taken by the
+    * flight control stabilizer.
+    * @param entriesStream
+    * @return Desired thrust.
+    */
+  def desiredThrustStream(
+                             entriesStream: DStream[(DroneIdType, Entry)]
+                           ): DStream[(DroneIdType, (BigInt, Double))] =
+    desiredStream(entriesStream) mapValues { case (ts, attitude, thrust) => (ts, thrust) }
 
-        import Attitude.{rollRange, pitchRange, yawRange}
-
-        if(Set("Roll", "Pitch", "Yaw") subsetOf dimVals.keySet)
-          Some(
-            ts -> Attitude(
-              rollRange proportionalValue dimVals("Roll"),
-              pitchRange proportionalValue  dimVals("Pitch"),
-              yawRange proportionalValue  dimVals("Yaw")
-            )
-          )
-        else None
-
-      case _ => Seq()
-    }
 
   /**
     * Extracts detected measured acceleration events from the, translated from json, entries stream.
@@ -84,6 +77,36 @@ object Sources {
           case Seq(x, y, z) => Some(ts -> Acceleration(x, y, z))
           case _ => None
         }
+
+      case _ => Seq()
+    }
+
+  private def desiredStream(
+                             entriesStream: DStream[(DroneIdType, Entry)]
+                           ): DStream[(DroneIdType, (BigInt, Attitude, Double))] =
+    entriesStream.flatMapValues {
+      case Entry(fields: List[Field @ unchecked], ts, _, _, "ActuatorDesired", _) =>
+
+        val dimVals = fields collect {
+          case Field(dim, _, "%", Value(_, v: Double) :: _) => dim -> v
+        } toMap
+
+        import Attitude.{rollRange, pitchRange, yawRange}
+
+
+        if(Set("Roll", "Pitch", "Yaw", "Thrust") subsetOf dimVals.keySet)
+          Some(
+            (
+              ts,
+              Attitude(
+                rollRange proportionalValue dimVals("Roll"),
+                pitchRange proportionalValue  dimVals("Pitch"),
+                yawRange proportionalValue  dimVals("Yaw")
+              ),
+              dimVals("Thrust")
+            )
+          )
+        else None
 
       case _ => Seq()
     }
