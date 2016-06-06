@@ -14,7 +14,7 @@ function getEntryTime {
 
 ZERO_TIME=$(getEntryTime $(head -n 1 $1))
 
-while [ 1 ]; do
+#while [ 1 ]; do
     PREV_TIME=$ZERO_TIME
     while read json ; do
 	CUR_TIME=$(getEntryTime $json)
@@ -25,5 +25,5 @@ while [ 1 ]; do
 	    PREV_TIME=$CUR_TIME
 	fi;
 	echo $json
-    done < $1
-done | nc -l -k 7891
+    done < $1 | nc -l -k 7891
+#done | nc -l -k 7891
