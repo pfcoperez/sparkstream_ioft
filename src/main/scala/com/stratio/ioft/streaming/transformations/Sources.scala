@@ -2,7 +2,8 @@ package com.stratio.ioft.streaming.transformations
 
 import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
 import com.stratio.ioft.domain._
-import com.stratio.ioft.domain.measures.{Acceleration, Attitude}
+import com.stratio.ioft.domain.measures.BatteryState._
+import com.stratio.ioft.domain.measures.{Acceleration, Attitude, BatteryState}
 import org.apache.spark.streaming.dstream.DStream
 
 /**
@@ -104,6 +105,38 @@ object Sources {
                 yawRange proportionalValue  dimVals("Yaw")
               ),
               dimVals("Thrust")
+            )
+          )
+        else None
+
+      case _ => Seq()
+    }
+
+  def powerMonitorStream(
+                      entriesStream: DStream[(DroneIdType, Entry)]
+                    ): DStream[(DroneIdType, (BigInt, BatteryState))] =
+    entriesStream.flatMapValues {
+      case Entry(fields: List[Field @ unchecked], ts, _, _, "FlightBatteryState", _) =>
+
+        val (intDimensions, doubleDimensions) = fields flatMap {
+          case Field(dim, _, unit, Value(_, v) :: _) =>
+            Some(unit -> v) collect {
+              case (unit, v: Double) if Set("A", "V", "mAh") contains unit => false -> (dim -> v)
+              case ("", v: BigInt) => true -> (dim -> v.toInt)
+            }
+        } partition(_._1)
+
+        val intDimMap = (intDimensions map {case (_, (k, v: Int)) => k -> v}).toMap
+        val doubleDimMap = (doubleDimensions map {case (_, (k, v: Double)) => k -> v}).toMap
+
+        if(Set(
+          "Voltage", "Current", "AvgCurrent",
+          "PeakCurrent", "ConsumedEnergy", "NbCells") subsetOf (intDimMap.keySet ++ doubleDimMap.keySet))
+          Some(ts ->
+            BatteryState(
+              intDimMap("NbCells"),
+              CurrentState(doubleDimMap("Voltage"), doubleDimMap("Current")),
+              Stats(doubleDimMap("AvgCurrent"), doubleDimMap("PeakCurrent"), doubleDimMap("ConsumedEnergy"))
             )
           )
         else None
