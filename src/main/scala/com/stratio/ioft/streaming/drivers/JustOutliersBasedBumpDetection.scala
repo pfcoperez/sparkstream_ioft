@@ -34,7 +34,7 @@ object JustOutliersBasedBumpDetection extends App
 
   implicit val formats = DefaultFormats ++ librePilotSerializers
 
-  val bumpInterval = Seconds(5)
+  val bumpInterval = Seconds(2)
 
   val entriesStream = rawInputStream.mapValues(parse(_).extract[Entry])
   val entriesWindowedStream = entriesStream.window(bumpInterval, bumpInterval)
