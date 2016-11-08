@@ -68,7 +68,7 @@ object Sources {
                         ): DStream[(DroneIdType, (BigInt, Acceleration))] =
     entriesStream.flatMapValues {
 
-      case Entry(fields: List[Field @ unchecked], ts, _, _, "AccelState", _) =>
+      case Entry(fields: List[Field @ unchecked], ts, _, _, "AccelSensor", _) =>
         val dimVals = fields collect {
           case Field(dim, _, "m/s^2", Value(_, v: Double) :: _) => dim -> v
         }
