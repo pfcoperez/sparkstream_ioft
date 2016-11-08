@@ -2,7 +2,8 @@ package com.stratio.ioft.streaming.drivers
 
 import com.stratio.ioft.domain.DroneIdType
 import com.stratio.ioft.domain.LibrePilot.Entry
-import com.stratio.ioft.domain.measures.Acceleration
+import com.stratio.ioft.domain.measures.BatteryState.{CurrentState, Stats}
+import com.stratio.ioft.domain.measures.{Acceleration, BatteryState}
 import com.stratio.ioft.persistence.CassandraPersistence._
 import com.stratio.ioft.persistence.PrimaryKey
 import com.stratio.ioft.serialization.json4s.librePilotSerializers
@@ -41,7 +42,7 @@ object CompleteFlowWithPersistence extends App with IOFTConfig {
 
   implicit val formats = DefaultFormats ++ librePilotSerializers
 
-  val bumpInterval = Seconds(5)
+  val bumpInterval = Seconds(2)
 
   val entriesStream = rawInputStream.mapValues(parse(_).extract[Entry])
   val entriesWindowedStream = entriesStream.window(bumpInterval, bumpInterval)
@@ -173,6 +174,37 @@ object CompleteFlowWithPersistence extends App with IOFTConfig {
       })
     }
   })
+
+  val powerState = powerMonitorStream(entriesStream)
+
+  val powerStateTableName = "power"
+  val powerStateColNames = Array("droneID", "event_time",
+    "instant_voltage",
+    "instant_current",
+    "average_current",
+    "peak_current",
+    "consumed_energy"
+  )
+
+  powerState map {
+    case (droneId, (ts, bs @ BatteryState(_, currentSt: CurrentState, stats: Stats))) =>
+      (Iterator(droneId, ts) ++ currentSt.productIterator ++ stats.productIterator) toArray
+  } foreachRDD { powerStateBatch =>
+
+      powerStateBatch.take(1).headOption foreach {
+        createTable(
+          powerStateTableName,
+          powerStateColNames,
+          PrimaryKey(Array("DroneID"), Array("event_time")),
+          _
+        )
+      }
+
+      powerStateBatch foreach { bs =>
+        persist(powerStateTableName, powerStateColNames, bs.iterator)
+      }
+
+  }
 
   /*
   val acceleration = accelerationStream(entriesStream)
