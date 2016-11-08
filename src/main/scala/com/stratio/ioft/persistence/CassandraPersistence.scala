@@ -26,8 +26,8 @@ object CassandraPersistence extends IOFTConfig {
 
   //println(s"Current keyspace: ${session.getLoggedKeyspace}")
 
-  def inferSchema(colNames: Array[String], row: Product): Iterator[String] = {
-    val y = row.productIterator
+  def inferSchema(colNames: Array[String], row: Seq[Any]): Iterator[String] = {
+    val y = row.iterator
     for{x <- colNames.iterator} yield {
       s"$x ${transformToCqlType(y.next.getClass)}"
     }
@@ -43,7 +43,10 @@ object CassandraPersistence extends IOFTConfig {
     }
   }
 
-  def createTable(tableName: String, colNames: Array[String], pk: PrimaryKey, row: Product) = {
+  def createTable(tableName: String, colNames: Array[String], pk: PrimaryKey, row: Product): Unit =
+    createTable(tableName, colNames, pk, row.productIterator.toSeq)
+
+  def createTable(tableName: String, colNames: Array[String], pk: PrimaryKey, row: Seq[Any]): Unit = {
     val schema = inferSchema(colNames, row)
     try {
       val query = s"CREATE TABLE IF NOT EXISTS $IOFTKeyspace.$tableName (${schema.mkString(", ")}, PRIMARY KEY ($pk))"
@@ -61,14 +64,19 @@ object CassandraPersistence extends IOFTConfig {
   def adaptToCQLTypes(content: Any): Object = {
     content match {
       case c: BigInt => c.bigInteger.longValue().asInstanceOf[java.lang.Long]
-      case other => other.asInstanceOf[Object]
+      case other =>
+        other.asInstanceOf[Object]
     }
   }
 
-  def persist(tableName: String, colNames: Array[String], data: Product) = {
+
+  def persist(tableName: String, colNames: Array[String], data: Product): Unit =
+    persist(tableName, colNames, data.productIterator)
+
+  def persist(tableName: String, colNames: Array[String], data: Iterator[Any]): Unit = {
     val array = new Array[Object](colNames.length)
     var pos = 0
-    for(i <- data.productIterator){
+    for(i <- data){
       array(pos) = adaptToCQLTypes(i)
       pos+=1
     }
