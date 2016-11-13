@@ -23,7 +23,7 @@ object Detectors {
     * deviations away from the window average AND surpass the given absolute threshold.
     *
     * @param zAccelStream z-axis acceleration event stream windowed by the time frame of interest.
-    * @param threshold Minimum unsigned magnitude to consider the value a bump.
+    * @param threshold Minimum ratio of sample to mean to accept a sample as an outlier 
     * @param nStDev How many standard deviations has a z-axis acceleration value to, at least, be afar from the time
     *               frame average.
     * @return Filtered z-axis acceleration events: Only those considered bumps.
@@ -38,8 +38,9 @@ object Detectors {
         else {
           val accelStats = rdd.map(_._2._2).stats
           rdd.filter { case (_, (_, accelval)) =>
-            val diff = Math.abs(accelval - accelStats.mean)
-            diff >= Math.max(threshold, nStDev*accelStats.sampleStdev)
+            val mean = accelStats.mean
+            val diff = Math.abs(accelval - mean)
+            diff >= Math.max(Math.abs(mean)*threshold, nStDev*accelStats.sampleStdev)
           }
         }
     }
