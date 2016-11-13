@@ -39,7 +39,7 @@ object NormalizedOutliersBasedBumpDetection extends App
 
   implicit val formats = DefaultFormats ++ librePilotSerializers
 
-  val bumpInterval = Seconds(2)
+  val bumpInterval = Seconds(5)
 
   val entriesStream = rawInputStream.mapValues(parse(_).extract[Entry])
   val entriesWindowedStream = entriesStream.window(bumpInterval, bumpInterval)
@@ -51,8 +51,8 @@ object NormalizedOutliersBasedBumpDetection extends App
     normalizedAccelerationStream(accel5sWindowedStream, hAttitudesWindowedStream)
 
   val bumpStream = averageOutlierBumpDetector(
-    normalizedAccelWindowedStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 5.0, 1.0
-  )
+    normalizedAccelWindowedStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 0.0, 2.5
+ )
   val groupedBumps = bumpStream map { case (id, (ts, accel)) => (id, ts/2000) -> (ts, accel) } reduceByKey { (a, b) =>
     Seq(a, b).maxBy(candidate => math.abs(candidate._2))
   } map {
