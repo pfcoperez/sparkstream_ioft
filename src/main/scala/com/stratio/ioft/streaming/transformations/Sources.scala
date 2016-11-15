@@ -122,7 +122,7 @@ object Sources {
           case Field(dim, _, unit, Value(_, v) :: _) =>
             Some(unit -> v) collect {
               case (unit, v: Double) if Set("A", "V", "mAh") contains unit => false -> (dim -> v)
-              case ("", v: BigInt) => true -> (dim -> v.toInt)
+              case ("", v: Int) => true -> (dim -> v.toInt)
             }
         } partition(_._1)
 

@@ -2,6 +2,6 @@ package com.stratio.ioft.serialization
 
 package object json4s {
 
-  val librePilotSerializers = FieldSerializer::EntrySerializer::Nil
+  val librePilotSerializers = ValueSerializer::FieldSerializer::EntrySerializer::Nil
 
 }

@@ -3,6 +3,25 @@ package com.stratio.ioft.serialization.json4s
 import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
 import org.json4s._
 
+object ValueSerializer extends CustomSerializer[Value]( format => (
+  {  // Extractor
+    case jo: JObject =>
+      implicit val _ = format
+      val value = ((jo \ "value"): @unchecked) match {
+        case JInt(v) => v.toInt
+        case JDouble(v) => v
+        case JDecimal(v) => v.toDouble
+        case _ => 0
+      }
+      Value(
+        (jo \ "name").extract[String],
+        value
+      )
+  },
+  PartialFunction.empty // Serializer
+  )
+)
+
 object FieldSerializer extends CustomSerializer[Field]( format => (
   {  // Extractor
     case jo: JObject =>
