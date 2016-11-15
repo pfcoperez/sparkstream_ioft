@@ -1,7 +1,7 @@
 package com.stratio.ioft.streaming.drivers
 
 import com.stratio.ioft.domain.DroneIdType
-import com.stratio.ioft.domain.LibrePilot.Entry
+import com.stratio.ioft.domain.Entry
 import com.stratio.ioft.domain.measures.BatteryState.{CurrentState, Stats}
 import com.stratio.ioft.domain.measures.{Acceleration, BatteryState}
 import com.stratio.ioft.persistence.CassandraPersistence._
@@ -42,7 +42,7 @@ object CompleteFlowWithPersistence extends App with IOFTConfig {
 
   implicit val formats = DefaultFormats ++ librePilotSerializers
 
-  val bumpInterval = Seconds(2)
+  val bumpInterval = Seconds(5)
 
   val entriesStream = rawInputStream.mapValues(parse(_).extract[Entry])
   val entriesWindowedStream = entriesStream.window(bumpInterval, bumpInterval)
@@ -54,7 +54,7 @@ object CompleteFlowWithPersistence extends App with IOFTConfig {
     normalizedAccelerationStream(accelWindowedStream, hAttitudesinWindowedStream)
 
   val bumpStream = averageOutlierBumpDetector(
-    normalizedAccelWindowedStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 5.0, 1.0
+    normalizedAccelWindowedStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 0.75, 2.5
   )
 
   val bumpTableName = "peaks"

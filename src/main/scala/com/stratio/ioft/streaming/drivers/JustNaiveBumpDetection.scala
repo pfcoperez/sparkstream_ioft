@@ -1,6 +1,6 @@
 package com.stratio.ioft.streaming.drivers
 
-import com.stratio.ioft.domain.LibrePilot.Entry
+import com.stratio.ioft.domain.Entry
 import com.stratio.ioft.domain._
 import com.stratio.ioft.domain.measures.Acceleration
 import com.stratio.ioft.streaming.transformations.Detectors._

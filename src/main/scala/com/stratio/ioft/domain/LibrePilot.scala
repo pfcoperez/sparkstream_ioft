@@ -1,6 +1,6 @@
 package com.stratio.ioft.domain
 
-object LibrePilot {
+
 
   case class Value(name: String, value: AnyVal)
 
@@ -15,4 +15,4 @@ object LibrePilot {
                     setting: Boolean
                   )
 
-}
+

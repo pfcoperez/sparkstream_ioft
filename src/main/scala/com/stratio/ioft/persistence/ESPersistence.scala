@@ -1,3 +1,4 @@
+/*
 package com.stratio.ioft.persistence
 
 import com.sksamuel.elastic4s.ElasticClient
@@ -26,3 +27,4 @@ object ESPersistence extends IOFTConfig {
   }
 
 }
+*/

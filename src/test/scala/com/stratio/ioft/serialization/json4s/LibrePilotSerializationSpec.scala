@@ -1,6 +1,6 @@
 package com.stratio.ioft.serialization.json4s
 
-import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
+import com.stratio.ioft.domain.{Entry, Field, Value}
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatest.{FlatSpec, Matchers}
 import org.json4s.jackson.JsonMethods._

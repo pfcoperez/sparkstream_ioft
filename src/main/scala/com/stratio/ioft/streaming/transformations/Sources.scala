@@ -1,6 +1,6 @@
 package com.stratio.ioft.streaming.transformations
 
-import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
+import com.stratio.ioft.domain.{Entry, Field, Value}
 import com.stratio.ioft.domain._
 import com.stratio.ioft.domain.measures.BatteryState._
 import com.stratio.ioft.domain.measures.{Acceleration, Attitude, BatteryState}
@@ -122,7 +122,7 @@ object Sources {
           case Field(dim, _, unit, Value(_, v) :: _) =>
             Some(unit -> v) collect {
               case (unit, v: Double) if Set("A", "V", "mAh") contains unit => false -> (dim -> v)
-              case ("", v: BigInt) => true -> (dim -> v.toInt)
+              case ("", v: Int) => true -> (dim -> v)
             }
         } partition(_._1)
 

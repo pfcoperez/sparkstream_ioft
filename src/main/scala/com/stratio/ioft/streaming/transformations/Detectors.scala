@@ -1,7 +1,7 @@
 package com.stratio.ioft.streaming.transformations
 
 import com.stratio.ioft.domain.DroneIdType
-import com.stratio.ioft.domain.LibrePilot.{Entry, Field, Value}
+import com.stratio.ioft.domain.{Entry, Field, Value}
 import com.stratio.ioft.domain.measures.{Acceleration, Attitude}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
