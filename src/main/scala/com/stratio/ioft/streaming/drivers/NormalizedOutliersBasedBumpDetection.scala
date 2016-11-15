@@ -52,7 +52,7 @@ object NormalizedOutliersBasedBumpDetection extends App
 
   val bumpStream = averageOutlierBumpDetector(
     normalizedAccelWindowedStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 0.75, 2.5
- )
+  )
   val groupedBumps = bumpStream map { case (id, (ts, accel)) => (id, ts/2000) -> (ts, accel) } reduceByKey { (a, b) =>
     Seq(a, b).maxBy(candidate => math.abs(candidate._2))
   } map {

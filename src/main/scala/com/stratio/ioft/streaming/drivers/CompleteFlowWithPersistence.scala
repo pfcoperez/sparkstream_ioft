@@ -54,7 +54,7 @@ object CompleteFlowWithPersistence extends App with IOFTConfig {
     normalizedAccelerationStream(accelWindowedStream, hAttitudesinWindowedStream)
 
   val bumpStream = averageOutlierBumpDetector(
-    normalizedAccelWindowedStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 5.0, 1.0
+    normalizedAccelWindowedStream.mapValues { case (ts, Acceleration(x,y,z)) => ts -> z }, 0.75, 2.5
   )
 
   val bumpTableName = "peaks"
